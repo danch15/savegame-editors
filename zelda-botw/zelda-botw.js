@@ -1,108 +1,95 @@
 /*
-	The legend of Zelda: Breath of the wild v20180520
-	by Marc Robledo 2017-2018
+	The legend of Zelda: Breath of the wild v20200218
+	by Marc Robledo 2017-2020
 */
 var currentEditingItem=0;
 
 SavegameEditor={
 	Name:'The legend of Zelda: Breath of the wild',
 	Filename:'game_data.sav',
-	Version:20180520,
+	Version:20200218,
 
 	/* Constants */
 	Constants:{
-		MAX_ITEMS:410,
-		STRING_SIZE:0x80,
+		MAX_ITEMS:420,
+		STRING_SIZE:0x20,
+		STRING64_SIZE:0x80,
 
-		/*						 v1.0    v1.1    v1.2    v1.3    v1.3.3   v1.4     v1.5 */
-		FILESIZE:				[896976, 897160, 897112, 907824, 1020648, 1027208, 1027208],
-		HEADER:					[0x24e2, 0x24ee, 0x2588, 0x29c0, 0x3ef8,  0x471a,  0x471b],
-		VERSION:				['v1.0', 'v1.1', 'v1.2', 'v1.3', 'v1.3.3','v1.4',  'v1.5'],
+		//missing versions: 1.1.1, 1.1.2 and 1.4.1
+		VERSION:				['v1.0', 'v1.1', 'v1.2', 'v1.3', 'v1.3.1', 'Kiosk', 'v1.3.3','v1.3.4', 'v1.4',  'v1.5',  'v1.5*',  'v1.6',  'v1.6*', 'v1.6**','v1.6***'],
+		FILESIZE:				[896976, 897160, 897112, 907824, 907824,  916576,  1020648, 1020648,   1027208, 1027208, 1027248, 1027216, 1027216, 1027216, 1027216],
+		HEADER:					[0x24e2, 0x24ee, 0x2588, 0x29c0, 0x2a46,  0x2f8e,  0x3ef8,  0x3ef9,    0x471a,  0x471b, 0x471b,  0x471e, 0x0f423d, 0x0f423e,0x0f423f],
 
-		MAP_ICONS: 0x9383490e,
-		MAP_POS: 0xea9def3f,
 		ICON_TYPES:{SWORD: 27, BOW:28, SHIELD:29, POT:30, STAR:31, CHEST:32,SKULL:33,LEAF:34,TOWER:35}
 	},
 
-	/* Offsets */
-	OffsetsAll:{
-		/*						 hash        v1.0      v1.1      v1.2      v1.3      v1.3.3    v1.4      v1.5 */
-		RUPEES:					[0x23149bf8, 0x00e0a0, 0x00e110, 0x00e110, 0x00e678, 0x00e730, 0x00eaf8, 0x00eaf8],
-		MONS:					[0xce7afed3, 0x0bc480, 0x0bc558, 0x0bc538, 0x0be728, 0x0d6ac8, 0x0d7fa8, 0x0d7fa8],
-		MAX_HEARTS:				[0x2906f327, 0x00fd28, 0x00fdb8, 0x00fdb8, 0x010438, 0x010508, 0x010970, 0x010970],
-		MAX_STAMINA:			[0x3adff047, 0x043208, 0x0432c0, 0x0432c0, 0x043c98, 0x04fdb0, 0x0503c8, 0x0503c8],
-		ITEMS:					[0x5f283289, 0x052828, 0x0528d8, 0x0528c0, 0x053890, 0x05fa48, 0x060408, 0x060408],
-		ITEMS_QUANTITY:			[0x6a09fc59, 0x063340, 0x0633f0, 0x0633d8, 0x064550, 0x070730, 0x0711c8, 0x0711c8],
-
-		FLAGS_WEAPON:			[0x57ee221d, 0x050328, 0x0503d8, 0x0503c0, 0x051270, 0x05d420, 0x05dd20, 0x05dd20],
-		FLAGSV_WEAPON:			[0xa6d926bc, 0x0a9ca8, 0x0a9d78, 0x0a9d58, 0x0ab8d0, 0x0c3bd8, 0x0c4c68, 0x0c4c68],
-		FLAGS_BOW:				[0x0cbf052a, 0x0045f0, 0x0045f8, 0x0045f8, 0x0047e8, 0x004828, 0x004990, 0x004990],
-		FLAGSV_BOW:				[0x1e3fd294, 0x00a8e0, 0x00a940, 0x00a940, 0x00ae08, 0x00ae90, 0x00b1e0, 0x00b1e0],
-		FLAGS_SHIELD:			[0xc5238d2b, 0x0b5810, 0x0b58e8, 0x0b58c8, 0x0b7910, 0x0cfc70, 0x0d1038, 0x0d1038],
-		FLAGSV_SHIELD:			[0x69f17e8a, 0x063218, 0x0632c8, 0x0632b0, 0x064420, 0x070600, 0x071098, 0x071098],
-
-		HORSE_SADDLES:			[0x333aa6e5, 0x03d0e8, 0x03d190, 0x03d190, 0x03d9d8, 0x049ab8, 0x04a008, 0x04a008],
-		HORSE_REINS:			[0x6150c6be, 0x060508, 0x0605b8, 0x0605a0, 0x0615d0, 0x06d7a0, 0x06e190, 0x06e190],
-		HORSE_NAMES:			[0x7b74e117, 0x070320, 0x0703c0, 0x0703a8, 0x071820, 0x07da30, 0x07e640, 0x07e640],
-		HORSE_MANES:			[0x9c6cfd3f, 0x0a6478, 0x0a6538, 0x0a6520, 0x0a7f18, 0x0c01c0, 0x0c1168, 0x0c1168],
-		HORSE_TYPES:			[0xc247b696, 0x0b46f8, 0x0b47d8, 0x0b47b8, 0x0b6780, 0x0cead8, 0x0cfe40, 0x0cfe40],
-		HORSE_BONDS:			[0xe1a0ca54, 0x0c3670, 0x0c3738, 0x0c3710, 0x0c5bb0, 0x0de2a0, 0x0df960, 0x0df960], /* max=0x3f80 */
-		HORSE_POSITION:			[0x982ba201, 0x07aed0, 0x07af90, 0x07af78, 0x07c8f8, 0x088b78, 0x089a80, 0x089a80],
-
-		KOROK_SEED_COUNTER:		[0x8a94e07a, 0x076148, 0x0761f8, 0x0761e0, 0x0778f8, 0x083b60, 0x084908, 0x084908],
-		DEFEATED_HINOX_COUNTER:	[0x54679940, 0x04d2b8, 0x04d368, 0x04d358, 0x04e158, 0x05a2f0, 0x05ab78, 0x05ab78],
-		DEFEATED_TALUS_COUNTER:	[0x698266be, 0x063010, 0x0630c0, 0x0630a8, 0x064218, 0x0703f0, 0x070e88, 0x070e88],
-		DEFEATED_MOLDUGA_COUNTER:[0x441b7231, 0x0466d0, 0x046788, 0x046780, 0x0472a8, 0x0533e8, 0x053b00, 0x053b00],
-
-		PLAYTIME:				[0x73c29681, 0x067888, 0x067920, 0x067908, 0x068c40, 0x074e40, 0x075998, 0x075998],
-
-		RELIC_GERUDO:			[0x97f925c3, 0x07adc0, 0x07ae80, 0x07ae68, 0x07c7e0, 0x088a60, 0x089968, 0x089968],
-		RELIC_GORON:			[0xf1cf4807, 0x0cb3c0, 0x0cb488, 0x0cb460, 0x0cdbf8, 0x0e6340, 0x0e7ba0, 0x0e7ba0],
-		RELIC_RITO:				[0xfda0cde4, 0x0da0d8, 0x0da190, 0x0da160, 0x0dcac0, 0x0f8370, 0x0f9cc8, 0x0f9cc8],
-
-		MOTORCYCLE:				[0xc9328299, 0x000000, 0x000000, 0x000000, 0x000000, 0x000000, 0x0d2660, 0x0d2660], /* IsGet_Obj_Motorcycle */
-
-		PLAYER_POSITION:		[0xa40ba103, 0x0a8cd8, 0x0a8da8, 0x0a8d90, 0x0aa8a8, 0x0c2b98, 0x0c3bf0, 0x0c3bf0],
-		MAP:                    [0x0bee9e46, 0x004128, 0x004130, 0x004130, 0x004310, 0x004348, 0x0044a0, 0x0044a0],
-		MAPTYPE:                [0xd913b769, 0x0c0588, 0x0c0658, 0x0c0630, 0x0c29b0, 0x0db080, 0x0dc658, 0x0dc658]
-	},
+	/* Hashes */
+	Hashes:[
+		0x0bee9e46, 'MAP',
+		0x0cbf052a, 'FLAGS_BOW',
+		0x1e3fd294, 'FLAGSV_BOW',
+		0x23149bf8, 'RUPEES',
+		0x2906f327, 'MAX_HEARTS',
+		0x333aa6e5, 'HORSE_SADDLES',
+		0x3adff047, 'MAX_STAMINA',
+		0x441b7231, 'DEFEATED_MOLDUGA_COUNTER',
+		0x54679940, 'DEFEATED_HINOX_COUNTER',
+		0x57ee221d, 'FLAGS_WEAPON',
+		0x5f283289, 'ITEMS',
+		0x6150c6be, 'HORSE_REINS',
+		0x698266be, 'DEFEATED_TALUS_COUNTER',
+		0x69f17e8a, 'FLAGSV_SHIELD',
+		0x6a09fc59, 'ITEMS_QUANTITY',
+		0x73c29681, 'PLAYTIME',
+		0x7b74e117, 'HORSE_NAMES',
+		0x8a94e07a, 'KOROK_SEED_COUNTER',
+		0x9383490e, 'MapApp_MapIconNo',
+		0x97f925c3, 'RELIC_GERUDO',
+		0x982ba201, 'HORSE_POSITION',
+		0x9c6cfd3f, 'HORSE_MANES',
+		0xa40ba103, 'PLAYER_POSITION',
+		0xa6d926bc, 'FLAGSV_WEAPON',
+		0xc247b696, 'HORSE_TYPES',
+		0xc5238d2b, 'FLAGS_SHIELD',
+		0xc9328299, 'MOTORCYCLE', /* IsGet_Obj_Motorcycle */
+		0xce7afed3, 'MONS',
+		0xd913b769, 'MAPTYPE',
+		0xe1a0ca54, 'HORSE_BONDS', /* max=0x3f80 */
+		0xea9def3f, 'MapApp_MapIconPos',
+		0xf1cf4807, 'RELIC_GORON',
+		0xfda0cde4, 'RELIC_RITO'
+	],
 
 
 	/* private functions */
 	_toHexInt:function(i){var s=i.toString(16);while(s.length<8)s='0'+s;return '0x'+s},
-	_writeBoolean:function(offset,val,arrayPos){if(arrayPos)tempFile.writeInt(offset+8*i,val?1:0);else tempFile.writeInt(offset,val?1:0)},
-	_writeValue:function(offset,val,arrayPos){if(arrayPos)tempFile.writeInt(offset+8*i,val);else tempFile.writeInt(offset,val)},
-	_writeString:function(offset,str){
-		for(var i=0; i<16; i++){
+	_writeBoolean:function(offset,val,arrayIndex){if(arrayIndex)tempFile.writeU32(offset+8*arrayIndex,val?1:0);else tempFile.writeU32(offset,val?1:0)},
+	_writeValue:function(offset,val,arrayIndex){if(arrayIndex)tempFile.writeU32(offset+8*arrayIndex,val);else tempFile.writeU32(offset,val)},
+	_writeFloat32:function(offset,val,arrayIndex){if(arrayIndex)tempFile.writeF32(offset+8*arrayIndex,val);else tempFile.writeF32(offset,val)},
+	_writeString:function(offset,str,len){
+		len=len || 8;
+		for(var i=0; i<len; i++){
 			tempFile.writeBytes(offset,[0,0,0,0]);
 			var fourBytes=str.substr(i*4, 4);
 			for(j=0; j<fourBytes.length; j++){
-				tempFile.writeByte(offset+j, fourBytes.charCodeAt(j));
+				tempFile.writeU8(offset+j, fourBytes.charCodeAt(j));
 			}
 			offset+=8;
 		}
 	},
-	_writeStringShort:function(offset,str){
-		for(var i=0; i<8; i++){
-			tempFile.writeBytes(offset,[0,0,0,0]);
-			var fourBytes=str.substr(i*4, 4);
-			for(j=0; j<fourBytes.length; j++){
-				tempFile.writeByte(offset+j, fourBytes.charCodeAt(j));
-			}
-			offset+=8;
-		}
-	},
+	_writeString64:function(offset,str,arrayIndex){if(typeof arrayIndex==='number')offset+=this.Constants.STRING64_SIZE*arrayIndex;this._writeString(offset,str, 16);},
+	_writeString256:function(offset,str){this._writeString(offset,str, 64);},
 
 	_searchHash:function(hash){
 		for(var i=0x0c; i<tempFile.fileSize; i+=8)
-			if(hash===tempFile.readInt(i))
+			if(hash===tempFile.readU32(i))
 				return i;
 		return false;
 	},
 	_readFromHash:function(hash){
 		var offset=this._searchHash(hash);
 		if(typeof offset === 'number')
-			return tempFile.readInt(offset+4);
+			return tempFile.readU32(offset+4);
 		return false;
 	},
 	_writeValueAtHash:function(hash,val){
@@ -111,22 +98,22 @@ SavegameEditor={
 			this._writeValue(offset+4,val);
 	},
 
-	_getOffsets(v){
+	_getOffsets:function(){
 		this.Offsets={};
-		if(v<this.OffsetsAll.RUPEES.length){
-			for(prop in this.OffsetsAll){
-				this.Offsets[prop]=this.OffsetsAll[prop][v+1];
-			}
-		}else{ /* unknown version */
-			var textarea=document.createElement('textarea');
-			for(prop in this.OffsetsAll){
-				var offset=this._searchHash(this.OffsetsAll[prop][0]);
-				if(offset){
-					textarea.value+=prop+':0x'+(offset+4).toString(16)+',\n';
-					this.Offsets[prop]=offset+4;
+		this.Headers={};
+		var startSearchOffset=0x0c;
+		for(var i=0; i<this.Hashes.length; i+=2){
+			for(var j=startSearchOffset; j<tempFile.fileSize; j+=8){
+				if(this.Hashes[i]===tempFile.readU32(j)){
+					this.Offsets[this.Hashes[i+1]]=j+4;
+					this.Headers[this.Hashes[i+1]]=this.Hashes[i];
+					startSearchOffset=j+8;
+					break;
 				}
 			}
-			document.body.appendChild(textarea);
+			/*if(typeof this.Offsets[this.Hashes[i+1]] === 'undefined'){
+				console.log(this.Hashes[i+1]+' not found');
+			}*/
 		}
 	},
 
@@ -144,28 +131,29 @@ SavegameEditor={
 		return 'other'
 	},
 
-	_readString:function(offset){
+	_readString:function(offset, len){
+		len=len || 8;
 		var txt='';
-		for(var j=0; j<16; j++){
+		for(var j=0; j<len; j++){
 			txt+=tempFile.readString(offset,4);
 			offset+=8;
 		}
 		return txt
 	},
-	_readStringShort:function(offset){
-		var txt='';
-		for(var j=0; j<8; j++){
-			txt+=tempFile.readString(offset,4);
-			offset+=8;
-		}
-		return txt
+	_readString64:function(offset,arrayIndex){
+		if(typeof arrayIndex==='number')
+			offset+=this.Constants.STRING64_SIZE*arrayIndex;
+		return this._readString(offset, 16);
+	},
+	_readString256:function(offset,){
+		return this._readString(offset, 64);
 	},
 
 	_loadItemName:function(i){
-		return this._readString(this.Offsets.ITEMS+i*0x80);
+		return this._readString64(this.Offsets.ITEMS+i*0x80);
 	},
 	_writeItemName:function(i,newItemNameId){
-		this._writeString(this.Offsets.ITEMS+i*0x80, newItemNameId);
+		this._writeString64(this.Offsets.ITEMS, newItemNameId, i);
 	},
 	_getItemMaximumQuantity:function(itemId){
 		var cat=this._getItemCategory(itemId);
@@ -189,7 +177,7 @@ SavegameEditor={
 	},
 	_createItemRow:function(i,itemCat){
 		var itemNameId=this._loadItemName(i);
-		var itemVal=itemCat===false?1:tempFile.readInt(this._getItemQuantityOffset(i));
+		var itemVal=itemCat===false?1:tempFile.readU32(this._getItemQuantityOffset(i));
 
 		var img=new Image();
 		img.id='icon'+i;
@@ -242,7 +230,13 @@ SavegameEditor={
 			i++;
 		}
 		if(i<this.Constants.MAX_ITEMS){
-			this.selectItem.selectedIndex++;
+			if(this._getItemCategory(this.selectItem.value)===currentTab){
+				this.selectItem.selectedIndex++;
+				if(this._getItemCategory(this.selectItem.value)!==currentTab || this.selectItem.value==='')
+					this.selectItem.value=this.selectItem.categories[currentTab].children[0].value;
+			}else{
+				this.selectItem.value=this.selectItem.categories[currentTab].children[0].value;
+			}
 			var itemNameId=this.selectItem.value;
 			this._writeItemName(i,itemNameId);
 			var row=this._createItemRow(i, false);
@@ -259,6 +253,7 @@ SavegameEditor={
 		document.getElementById('item-name'+i).innerHTML='';
 		document.getElementById('item-name'+i).parentElement.appendChild(this.selectItem);
 		this.selectItem.focus();
+		this.selectItem.click();
 	},
 	editItem2:function(i,nameId){
 		var oldCat=this._getItemCategory(this._loadItemName(i));
@@ -268,6 +263,7 @@ SavegameEditor={
 			var row=this._getItemRow(i);
 			row.parentElement.removeChild(row);
 			document.getElementById('container-'+newCat).appendChild(row);
+			showTab(newCat);
 			(row.previousElementSibling || row).scrollIntoView({block:'start', behavior:'smooth'});
 		}
 		this._writeItemName(i, nameId);
@@ -275,6 +271,9 @@ SavegameEditor={
 		BOTW_Icons.setIcon(document.getElementById('icon'+i), nameId);
 		if(document.getElementById('number-item'+i))
 			document.getElementById('number-item'+i).maxValue=this._getItemMaximumQuantity(nameId);
+	},
+	
+	filterItems:function(category){
 	},
 
 	_getModifierOffset1:function(type){
@@ -295,41 +294,27 @@ SavegameEditor={
 	},
 
 	editModifier2:function(type,i,modifier,val){
-		tempFile.writeInt(this._getModifierOffset1(type)+i*0x08, modifier);
-		tempFile.writeInt(this._getModifierOffset2(type)+i*0x08, val);
+		tempFile.writeU32(this._getModifierOffset1(type)+i*0x08, modifier);
+		tempFile.writeU32(this._getModifierOffset2(type)+i*0x08, val);
 	},
 
-	editHorse:function(i){
-		currentEditingItem=i;
-		if(currentEditingItem==5){ /* untamed horse */
-			hide('row-tamed-horse');
-			if(!this._readString(this.Offsets.HORSE_TYPES+this.Constants.STRING_SIZE*5).startsWith('GameRomHorse')){
-				MarcDialogs.alert('Error: this will only work if your savegame has Link on an untamed horse.');
-				return false;
-			}
-			getField('horse-type').children[27].disabled=false;
-			getField('horse-type').children[28].disabled=false;
-		}else{
-			show('row-tamed-horse');
-			setValue('horse-name',this._readString(this.Offsets.HORSE_NAMES+this.Constants.STRING_SIZE*i));
-			setValue('horse-saddles',this._readString(this.Offsets.HORSE_SADDLES+this.Constants.STRING_SIZE*i));
-			setValue('horse-reins',this._readString(this.Offsets.HORSE_REINS+this.Constants.STRING_SIZE*i));
-			getField('horse-type').children[27].disabled=true;
-			getField('horse-type').children[28].disabled=true;
-		}
-		setValue('horse-type',this._readString(this.Offsets.HORSE_TYPES+this.Constants.STRING_SIZE*i));
-		MarcDialogs.open('horse');
+	setHorseName:function(i,val){
+		if(i<5)
+			this._writeString64(this.Offsets.HORSE_NAMES, val, i);
 	},
-	editHorse2:function(i,name,saddles,reins,type){
-		if(currentEditingItem<5){
-			this._writeString(this.Offsets.HORSE_NAMES+this.Constants.STRING_SIZE*i, getValue('horse-name'));
-			this._writeString(this.Offsets.HORSE_SADDLES+this.Constants.STRING_SIZE*i, getValue('horse-saddles'));
-			this._writeString(this.Offsets.HORSE_REINS+this.Constants.STRING_SIZE*i, getValue('horse-reins'));
-		}
-		this._writeString(this.Offsets.HORSE_TYPES+this.Constants.STRING_SIZE*i, getValue('horse-type'));
-
-		if(getValue('horse-type')==='GameRomHorse00L'){
-			this._writeString(this.Offsets.HORSE_MANES+this.Constants.STRING_SIZE*i, 'Horse_Link_Mane_00L');
+	setHorseSaddle:function(i,val){
+		if(i<5)
+			this._writeString64(this.Offsets.HORSE_SADDLES, val, i);
+	},
+	setHorseReins:function(i,val){
+		if(i<5)
+			this._writeString64(this.Offsets.HORSE_REINS, val, i);
+	},
+	setHorseType:function(i,val){
+		if(currentEditingItem<6){
+			this._writeString64(this.Offsets.HORSE_TYPES, val, i);
+			/* fix mane */
+			this._writeString64(this.Offsets.HORSE_MANES, (val==='GameRomHorse00L'?'Horse_Link_Mane_00L':'Horse_Link_Mane'), i);
 		}
 	},
 
@@ -343,23 +328,37 @@ SavegameEditor={
 	},
 
 
+	changeEndianess:function(){
+		var tempFileByteSwapped=new MarcFile(tempFile.fileSize);
+		tempFileByteSwapped.fileType=tempFile.fileType;
+		tempFileByteSwapped.fileName=tempFile.fileName;
+		tempFileByteSwapped.littleEndian=!tempFile.littleEndian;
+		for(var i=0; i<tempFile.fileSize; i+=4){
+			tempFileByteSwapped.writeU32(i, tempFile.readU32(i));
+		}
+		tempFile=tempFileByteSwapped;
+		this.checkValidSavegame();
+	},
+
 	/* check if savegame is valid */
 	_checkValidSavegameByConsole:function(switchMode){
 		var CONSOLE=switchMode?'Switch':'Wii U';
 		tempFile.littleEndian=switchMode;
 		for(var i=0; i<this.Constants.FILESIZE.length; i++){
-			var versionHash=tempFile.readInt(0);
-			if(versionHash===0x2a46) //v1.3.0 switch?
-				versionHash=0x29c0;
-			if(versionHash===0x3ef9) //v1.3.3 switch?
-				versionHash=0x3ef8;
+			var versionHash=tempFile.readU32(0);
 
-			if(tempFile.fileSize===this.Constants.FILESIZE[i] && versionHash===this.Constants.HEADER[i] && tempFile.readInt(4)===0xffffffff){
+			if(tempFile.fileSize===this.Constants.FILESIZE[i] && versionHash===this.Constants.HEADER[i] && tempFile.readU32(4)===0xffffffff){
 				this._getOffsets(i);
 				setValue('version', this.Constants.VERSION[i]+' ('+CONSOLE+')');
 				return true;
+			}else if((tempFile.fileSize>=896976 && tempFile.fileSize<=1500000) && versionHash===this.Constants.HEADER[i] && tempFile.readU32(4)===0xffffffff){ /* check for mods, filesizes vary */
+				this._getOffsets(i);
+				setValue('version', this.Constants.VERSION[i]+'<small>mod</small> ('+CONSOLE+')');
+				return true;			
 			}
 		}
+		
+		
 
 		return false
 	},
@@ -384,6 +383,7 @@ SavegameEditor={
 		setNumericRange('relic-rito', 0, 99);
 
 		/* prepare edit item selector */
+		this.selectItem.categories={};
 		for(var i=0; i<BOTW_Data.Translations.length; i++){
 			var optGroup=document.createElement('optgroup');
 			optGroup.label=BOTW_Data.Translations[i].id;
@@ -391,10 +391,12 @@ SavegameEditor={
 			for(var item in BOTW_Data.Translations[i].items){
 				var opt=document.createElement('option');
 				opt.value=item;
+				opt.group=BOTW_Data.Translations[i].id;
 				opt.innerHTML=BOTW_Data.Translations[i].items[item];
 				optGroup.appendChild(opt);
 			}
 			this.selectItem.appendChild(optGroup);
+			this.selectItem.categories[BOTW_Data.Translations[i].id]=optGroup;
 		}
 		this.selectItem.value='Armor_180_Lower';
 
@@ -447,10 +449,28 @@ SavegameEditor={
 			}
 		});
 
-		/* dialogs */
-		select('horse-saddles', this._arrayToSelectOpts(BOTW_Data.HORSE_SADDLES));
-		select('horse-reins', this._arrayToSelectOpts(BOTW_Data.HORSE_REINS));
-		select('horse-type', this._arrayToSelectOpts(BOTW_Data.HORSE_TYPES));
+
+		/* horses */
+		for(var i=0; i<6; i++){
+			if(i<5){
+				get('input-horse'+i+'-name').horseIndex=i;
+				get('input-horse'+i+'-name').addEventListener('change', function(){SavegameEditor.setHorseName(this.horseIndex, this.value)}, false);
+				get('select-horse'+i+'-saddles').horseIndex=i;
+				get('select-horse'+i+'-saddles').addEventListener('change', function(){SavegameEditor.setHorseSaddle(this.horseIndex, this.value)}, false);
+				get('select-horse'+i+'-reins').horseIndex=i;
+				get('select-horse'+i+'-reins').addEventListener('change', function(){SavegameEditor.setHorseReins(this.horseIndex, this.value)}, false);
+			}
+			get('select-horse'+i+'-type').horseIndex=i;
+			get('select-horse'+i+'-type').addEventListener('change', function(){SavegameEditor.setHorseType(this.horseIndex, this.value)}, false);
+
+			select('horse'+i+'-saddles', this._arrayToSelectOpts(BOTW_Data.HORSE_SADDLES));
+			select('horse'+i+'-reins', this._arrayToSelectOpts(BOTW_Data.HORSE_REINS));
+			select('horse'+i+'-type', this._arrayToSelectOpts(i===5?BOTW_Data.HORSE_TYPES.concat(BOTW_Data.HORSE_TYPES_UNTAMMED):BOTW_Data.HORSE_TYPES));
+		}
+		
+		
+		
+		MarcTooltips.add('.tab-button',{className:'dark',fixed:true});
 	},
 
 	_timeToString:function(timeVal){
@@ -467,24 +487,24 @@ SavegameEditor={
 
 
 		/* prepare editor */
-		setValue('rupees', tempFile.readInt(this.Offsets.RUPEES));
-		setValue('mons', tempFile.readInt(this.Offsets.MONS));
-		setValue('max-hearts', tempFile.readInt(this.Offsets.MAX_HEARTS));
-		setValue('max-stamina', tempFile.readInt(this.Offsets.MAX_STAMINA));
+		setValue('rupees', tempFile.readU32(this.Offsets.RUPEES));
+		setValue('mons', tempFile.readU32(this.Offsets.MONS));
+		setValue('max-hearts', tempFile.readU32(this.Offsets.MAX_HEARTS));
+		setValue('max-stamina', tempFile.readU32(this.Offsets.MAX_STAMINA));
 
-		setValue('relic-gerudo', tempFile.readInt(this.Offsets.RELIC_GERUDO));
-		setValue('relic-goron', tempFile.readInt(this.Offsets.RELIC_GORON));
-		setValue('relic-rito', tempFile.readInt(this.Offsets.RELIC_RITO));
+		setValue('relic-gerudo', tempFile.readU32(this.Offsets.RELIC_GERUDO));
+		setValue('relic-goron', tempFile.readU32(this.Offsets.RELIC_GORON));
+		setValue('relic-rito', tempFile.readU32(this.Offsets.RELIC_RITO));
 
-		setValue('koroks', tempFile.readInt(this.Offsets.KOROK_SEED_COUNTER));
-		setValue('defeated-hinox', tempFile.readInt(this.Offsets.DEFEATED_HINOX_COUNTER));
-		setValue('defeated-talus', tempFile.readInt(this.Offsets.DEFEATED_TALUS_COUNTER));
-		setValue('defeated-molduga', tempFile.readInt(this.Offsets.DEFEATED_MOLDUGA_COUNTER));
-		setValue('playtime',this._timeToString(tempFile.readInt(this.Offsets.PLAYTIME)));
+		setValue('koroks', tempFile.readU32(this.Offsets.KOROK_SEED_COUNTER));
+		setValue('defeated-hinox', tempFile.readU32(this.Offsets.DEFEATED_HINOX_COUNTER));
+		setValue('defeated-talus', tempFile.readU32(this.Offsets.DEFEATED_TALUS_COUNTER));
+		setValue('defeated-molduga', tempFile.readU32(this.Offsets.DEFEATED_MOLDUGA_COUNTER));
+		setValue('playtime',this._timeToString(tempFile.readU32(this.Offsets.PLAYTIME)));
 
 
 		/* motorcycle */
-		document.getElementById('checkbox-motorcycle').checked=!!tempFile.readInt(this.Offsets.MOTORCYCLE);
+		document.getElementById('checkbox-motorcycle').checked=!!tempFile.readU32(this.Offsets.MOTORCYCLE);
 		if(this.Offsets.MOTORCYCLE){
 			document.getElementById('row-motorcycle').style.display='flex';
 		}else{
@@ -493,12 +513,12 @@ SavegameEditor={
 
 
 		/* coordinates */
-		setValue('pos-x', tempFile.readFloat32(this.Offsets.PLAYER_POSITION));
-		setValue('pos-y', tempFile.readFloat32(this.Offsets.PLAYER_POSITION+8));
-		setValue('pos-z', tempFile.readFloat32(this.Offsets.PLAYER_POSITION+16));
+		setValue('pos-x', tempFile.readF32(this.Offsets.PLAYER_POSITION));
+		setValue('pos-y', tempFile.readF32(this.Offsets.PLAYER_POSITION+8));
+		setValue('pos-z', tempFile.readF32(this.Offsets.PLAYER_POSITION+16));
 
-		var map=this._readStringShort(this.Offsets.MAP);
-		var mapType=this._readStringShort(this.Offsets.MAPTYPE);
+		var map=this._readString(this.Offsets.MAP);
+		var mapType=this._readString(this.Offsets.MAPTYPE);
 		getField('pos-map').children[0].value=map;
 		getField('pos-map').children[0].innerHTML='* '+map+' *';
 		getField('pos-maptype').children[0].value=mapType;
@@ -506,13 +526,13 @@ SavegameEditor={
 		setValue('pos-map',map)
 		setValue('pos-maptype',mapType)
 
-		setValue('pos-x-horse', tempFile.readFloat32(this.Offsets.HORSE_POSITION));
-		setValue('pos-y-horse', tempFile.readFloat32(this.Offsets.HORSE_POSITION+8));
-		setValue('pos-z-horse', tempFile.readFloat32(this.Offsets.HORSE_POSITION+16));
+		setValue('pos-x-horse', tempFile.readF32(this.Offsets.HORSE_POSITION));
+		setValue('pos-y-horse', tempFile.readF32(this.Offsets.HORSE_POSITION+8));
+		setValue('pos-z-horse', tempFile.readF32(this.Offsets.HORSE_POSITION+16));
 
 
 		/* map pins */
-		loadMapPins()
+		loadMapPins();
 
 
 		/* items */
@@ -555,9 +575,9 @@ SavegameEditor={
 			}
 
 		}
-		MarcTooltips.add(document.querySelectorAll('#container-weapons input'),'Weapon durability',{position:'bottom',align:'right'});
-		MarcTooltips.add(document.querySelectorAll('#container-bows input'),'Bow durability',{position:'bottom',align:'right'});
-		MarcTooltips.add(document.querySelectorAll('#container-shields input'),'Shield durability',{position:'bottom',align:'right'});
+		MarcTooltips.add('#container-weapons input',{text:'Weapon durability',position:'bottom',align:'right'});
+		MarcTooltips.add('#container-bows input',{text:'Bow durability',position:'bottom',align:'right'});
+		MarcTooltips.add('#container-shields input',{text:'Shield durability',position:'bottom',align:'right'});
 		BOTW_Icons.startLoadingIcons();
 
 		/* modifier column */
@@ -565,78 +585,130 @@ SavegameEditor={
 		for(var j=0; j<3; j++){
 			var modifierColumn=modifierColumns[j];
 			for(var i=0; i<modifiersArray[j]; i++){
-				var modifier=tempFile.readInt(this.Offsets['FLAGS_'+modifierColumn.toUpperCase()]+i*8);
+				var modifier=tempFile.readU32(this.Offsets['FLAGS_'+modifierColumn.toUpperCase()]+i*8);
 				var modifierSelect=select('modifier-'+modifierColumn+'s-'+i, BOTW_Data.MODIFIERS.concat({value:modifier,name:this._toHexInt(modifier)}));
 				modifierSelect.value=modifier;
 
 				var additional=document.getElementById('container-'+modifierColumn+'s').children[i].children[2];
 				additional.appendChild(modifierSelect);
-				additional.appendChild(inputNumber('modifier-'+modifierColumn+'s-value-'+i, 0, 0xffffffff, tempFile.readInt(this.Offsets['FLAGSV_'+modifierColumn.toUpperCase()]+i*8)));
+				additional.appendChild(inputNumber('modifier-'+modifierColumn+'s-value-'+i, 0, 0xffffffff, tempFile.readU32(this.Offsets['FLAGSV_'+modifierColumn.toUpperCase()]+i*8)));
 			}
 		}
+
+
+		/* horses */
+		for(var i=0; i<6; i++){
+			if(i<5){
+				setValue('horse'+i+'-name',this._readString64(this.Offsets.HORSE_NAMES, i));
+				setValue('horse'+i+'-saddles',this._readString64(this.Offsets.HORSE_SADDLES, i));
+				setValue('horse'+i+'-reins',this._readString64(this.Offsets.HORSE_REINS, i));
+			}
+			var horseType=this._readString64(this.Offsets.HORSE_TYPES, i);
+			if(horseType){
+				setValue('horse'+i+'-type',horseType);
+				get('row-horse'+i).style.visibility='visible';
+			}else{
+				get('row-horse'+i).style.visibility='hidden';
+			}
+		}
+
+
+
+
+
+
+		showTab('home');
 	},
 
 	/* save function */
 	save:function(){
 		/* STATS */
-		tempFile.writeInt(this.Offsets.RUPEES, getValue('rupees'));
-		tempFile.writeInt(this.Offsets.MONS, getValue('mons'));
-		tempFile.writeInt(this.Offsets.MAX_HEARTS, getValue('max-hearts'));
-		tempFile.writeInt(this.Offsets.MAX_STAMINA, getValue('max-stamina'));
+		tempFile.writeU32(this.Offsets.RUPEES, getValue('rupees'));
+		tempFile.writeU32(this.Offsets.MONS, getValue('mons'));
+		tempFile.writeU32(this.Offsets.MAX_HEARTS, getValue('max-hearts'));
+		tempFile.writeU32(this.Offsets.MAX_STAMINA, getValue('max-stamina'));
 
-		tempFile.writeInt(this.Offsets.RELIC_GERUDO, getValue('relic-gerudo'));
-		tempFile.writeInt(this.Offsets.RELIC_GORON, getValue('relic-goron'));
-		tempFile.writeInt(this.Offsets.RELIC_RITO, getValue('relic-rito'));
+		tempFile.writeU32(this.Offsets.RELIC_GERUDO, getValue('relic-gerudo'));
+		tempFile.writeU32(this.Offsets.RELIC_GORON, getValue('relic-goron'));
+		tempFile.writeU32(this.Offsets.RELIC_RITO, getValue('relic-rito'));
 		
-		tempFile.writeInt(this.Offsets.KOROK_SEED_COUNTER, getValue('koroks'));
-		tempFile.writeInt(this.Offsets.DEFEATED_HINOX_COUNTER, getValue('defeated-hinox'));
-		tempFile.writeInt(this.Offsets.DEFEATED_TALUS_COUNTER, getValue('defeated-talus'));
-		tempFile.writeInt(this.Offsets.DEFEATED_MOLDUGA_COUNTER, getValue('defeated-molduga'));
+		tempFile.writeU32(this.Offsets.KOROK_SEED_COUNTER, getValue('koroks'));
+		tempFile.writeU32(this.Offsets.DEFEATED_HINOX_COUNTER, getValue('defeated-hinox'));
+		tempFile.writeU32(this.Offsets.DEFEATED_TALUS_COUNTER, getValue('defeated-talus'));
+		tempFile.writeU32(this.Offsets.DEFEATED_MOLDUGA_COUNTER, getValue('defeated-molduga'));
 		
 
 		/* MOTORCYCLE */
 		if(this.Offsets.MOTORCYCLE){
-			tempFile.writeInt(this.Offsets.MOTORCYCLE, getField('checkbox-motorcycle').checked?1:0);
+			tempFile.writeU32(this.Offsets.MOTORCYCLE, getField('checkbox-motorcycle').checked?1:0);
 		}
 
 
 
 		/* COORDINATES */
-		tempFile.writeFloat32(this.Offsets.PLAYER_POSITION, getValue('pos-x'));
-		tempFile.writeFloat32(this.Offsets.PLAYER_POSITION+8, getValue('pos-y'));
-		tempFile.writeFloat32(this.Offsets.PLAYER_POSITION+16, getValue('pos-z'));
+		tempFile.writeF32(this.Offsets.PLAYER_POSITION, getValue('pos-x'));
+		tempFile.writeF32(this.Offsets.PLAYER_POSITION+8, getValue('pos-y'));
+		tempFile.writeF32(this.Offsets.PLAYER_POSITION+16, getValue('pos-z'));
 		
-		this._writeStringShort(this.Offsets.MAP, getValue('pos-map'))
-		this._writeStringShort(this.Offsets.MAPTYPE, getValue('pos-maptype'))
+		this._writeString(this.Offsets.MAP, getValue('pos-map'))
+		this._writeString(this.Offsets.MAPTYPE, getValue('pos-maptype'))
 
-		tempFile.writeFloat32(this.Offsets.HORSE_POSITION, getValue('pos-x-horse'));
-		tempFile.writeFloat32(this.Offsets.HORSE_POSITION+8, getValue('pos-y-horse'));
-		tempFile.writeFloat32(this.Offsets.HORSE_POSITION+16, getValue('pos-z-horse'));
+		tempFile.writeF32(this.Offsets.HORSE_POSITION, getValue('pos-x-horse'));
+		tempFile.writeF32(this.Offsets.HORSE_POSITION+8, getValue('pos-y-horse'));
+		tempFile.writeF32(this.Offsets.HORSE_POSITION+16, getValue('pos-z-horse'));
 
 
 		/* ITEMS */
 		for(var i=0; i<this.Constants.MAX_ITEMS; i++){
 			if(document.getElementById('number-item'+i) || document.getElementById('select-item'+i))
-				tempFile.writeInt(this._getItemQuantityOffset(i), getValue('item'+i));
+				tempFile.writeU32(this._getItemQuantityOffset(i), getValue('item'+i));
 			else
 				break;
 		}
 
 		/* modifiers */
 		for(var i=0; document.getElementById('select-modifier-weapons-'+i); i++){
-			tempFile.writeInt(this.Offsets.FLAGS_WEAPON+i*8, getValue('modifier-weapons-'+i));
-			tempFile.writeInt(this.Offsets.FLAGSV_WEAPON+i*8, getValue('modifier-weapons-value-'+i));
+			tempFile.writeU32(this.Offsets.FLAGS_WEAPON+i*8, getValue('modifier-weapons-'+i));
+			tempFile.writeU32(this.Offsets.FLAGSV_WEAPON+i*8, getValue('modifier-weapons-value-'+i));
 		}
 		for(var i=0; document.getElementById('select-modifier-bows-'+i); i++){
-			tempFile.writeInt(this.Offsets.FLAGS_BOW+i*8, getValue('modifier-bows-'+i));
-			tempFile.writeInt(this.Offsets.FLAGSV_BOW+i*8, getValue('modifier-bows-value-'+i));
+			tempFile.writeU32(this.Offsets.FLAGS_BOW+i*8, getValue('modifier-bows-'+i));
+			tempFile.writeU32(this.Offsets.FLAGSV_BOW+i*8, getValue('modifier-bows-value-'+i));
 		}
 		for(var i=0; document.getElementById('select-modifier-shields-'+i); i++){
-			tempFile.writeInt(this.Offsets.FLAGS_SHIELD+i*8, getValue('modifier-shields-'+i));
-			tempFile.writeInt(this.Offsets.FLAGSV_SHIELD+i*8, getValue('modifier-shields-value-'+i));
+			tempFile.writeU32(this.Offsets.FLAGS_SHIELD+i*8, getValue('modifier-shields-'+i));
+			tempFile.writeU32(this.Offsets.FLAGSV_SHIELD+i*8, getValue('modifier-shields-value-'+i));
 		}
 	}
 }
+
+
+
+
+
+/* TABS */
+var availableTabs=['home','weapons','bows','shields','clothes','materials','food','other','horses','master'];
+
+
+var currentTab;
+function showTab(newTab){
+	currentTab=newTab;
+	for(var i=0; i<availableTabs.length; i++){
+		document.getElementById('tab-button-'+availableTabs[i]).className=currentTab===availableTabs[i]?'tab-button active':'tab-button';
+		document.getElementById('tab-'+availableTabs[i]).style.display=currentTab===availableTabs[i]?'block':'none';
+	}
+	
+	document.getElementById('add-item-button').style.display=(newTab==='home' || newTab==='horses' || newTab==='master')? 'none':'block';
+
+	if(newTab==='master'){
+		if(BOTWMasterEditor.isLoaded())
+			BOTWMasterEditor.refreshResults();
+		else
+			BOTWMasterEditor.loadHashes();
+	}
+}
+
+
 
 /*
 function setValueByHash(hash, val){
@@ -647,7 +719,7 @@ function setValueByHash(hash, val){
 			SavegameEditor._writeValue(offset, val[1], 1);
 			SavegameEditor._writeValue(offset, val[2], 2);
 		}else if(typeof val==='string'){
-			SavegameEditor._writeString(offset, val);
+			SavegameEditor._writeString64(offset, val);
 		}else{
 			SavegameEditor._writeValue(offset, val);
 		}
@@ -660,8 +732,8 @@ function setBooleans(hashTable, counterElement){
 	var counter=0;
 	for(var i=0;i<hashTable.length; i++){
 		var offset=SavegameEditor._searchHash(hashTable[i]);
-		if(offset && !tempFile.readInt(offset+4)){
-			tempFile.writeInt(offset+4, 1);
+		if(offset && !tempFile.readU32(offset+4)){
+			tempFile.writeU32(offset+4, 1);
 			counter++;
 		}
 	}
@@ -674,7 +746,7 @@ function setBooleans(hashTable, counterElement){
 function unlockKoroks(){
 	var unlockedKoroks=setBooleans(BOTW_Data.KOROKS,'koroks');
 	var offset=SavegameEditor._searchHash(0x64622a86); //HiddenKorok_Complete
-	tempFile.writeInt(offset+4, 1);
+	tempFile.writeU32(offset+4, 1);
 
 	//search korok seeds in inventory
 	for(var i=0; i<SavegameEditor.Constants.MAX_ITEMS; i++){
@@ -707,9 +779,9 @@ function setCompendiumToStock(){
 	for(var i=0; i<BOTW_Data.PICTURE_BOOK_SIZE.length; i++){
 		var offset=SavegameEditor._searchHash(BOTW_Data.PICTURE_BOOK_SIZE[i]);
 		if(typeof offset === 'number'){
-			var val=tempFile.readInt(offset+4);
+			var val=tempFile.readU32(offset+4);
 			if(val && val!==0xffffffff){
-				tempFile.writeInt(offset+4, 0xffffffff);
+				tempFile.writeU32(offset+4, 0xffffffff);
 				setToStock++;
 			}
 		}
@@ -799,7 +871,7 @@ function clearMapPins(){
 	iterateMapPins(function(val,offset){
 		if (val != 0xffffffff){
 			count++;
-			tempFile.writeInt(offset, 0xffffffff)
+			tempFile.writeU32(offset, 0xffffffff)
 		}
 		return true;
 	})
@@ -811,7 +883,7 @@ function clearMapPins(){
 		i++;
 		if (val != expect){
 			count2++
-			tempFile.writeFloat32(offset, expect)
+			tempFile.writeF32(offset, expect)
 		}
 		return true
 	})
@@ -824,12 +896,13 @@ function clearMapPins(){
 }
 
 function iterateMapPins(f){
-	var offset = SavegameEditor._searchHash(SavegameEditor.Constants.MAP_ICONS)
+	var offset = SavegameEditor.Offsets.MapApp_MapIconNo-4;
 	for (var i = 0;; i++){
 		var base = offset + (8 * i)
-		var hdr = tempFile.readInt(base)
-		var val = tempFile.readInt(base + 4)
-		if (hdr != SavegameEditor.Constants.MAP_ICONS){
+		var hdr = tempFile.readU32(base)
+		var val = tempFile.readU32(base + 4)
+		//if (hdr != SavegameEditor.Constants.MAP_ICONS){
+		if (hdr != SavegameEditor.Headers.MapApp_MapIconNo){
 			break
 		}
 		if (!f(val,base+4)){
@@ -838,12 +911,12 @@ function iterateMapPins(f){
 	}
 }
 function iterateMapPinLocations(f){
-	offset = SavegameEditor._searchHash(SavegameEditor.Constants.MAP_POS)
+	offset = SavegameEditor.Offsets.MapApp_MapIconPos-4;
 	for (var i = 0;; i++){
 		var base = offset + (8 * i)
-		var hdr = tempFile.readInt(base)
-		var val = tempFile.readFloat32(base + 4)
-		if (hdr != SavegameEditor.Constants.MAP_POS){
+		var hdr = tempFile.readU32(base)
+		var val = tempFile.readF32(base + 4)
+		if (hdr != SavegameEditor.Headers.MapApp_MapIconPos){
 			break
 		}
 		if(!f(val,base+4)){
@@ -860,9 +933,9 @@ function dist(px,py,pz,l){
 
 
 function addToMap(data, icon){
-	var px=tempFile.readFloat32(SavegameEditor.Offsets.PLAYER_POSITION);
-	var py=tempFile.readFloat32(SavegameEditor.Offsets.PLAYER_POSITION+8);
-	var pz=tempFile.readFloat32(SavegameEditor.Offsets.PLAYER_POSITION+16);
+	var px=tempFile.readF32(SavegameEditor.Offsets.PLAYER_POSITION);
+	var py=tempFile.readF32(SavegameEditor.Offsets.PLAYER_POSITION+8);
+	var pz=tempFile.readF32(SavegameEditor.Offsets.PLAYER_POSITION+16);
 
 	var points = [];
 	for (var i = 0; i<data.length; i++){
@@ -882,7 +955,7 @@ function addToMap(data, icon){
 		var pt = points[i]
 		var hash = pt.H;
 		var offset=SavegameEditor._searchHash(hash);
-		if(offset && !tempFile.readInt(offset + 4)){
+		if(offset && !tempFile.readU32(offset + 4)){
 			addMapPin(icon, pt.L)
 			count++;
 			mapPinCount++;
@@ -896,7 +969,7 @@ function addMapPin(icon, location){
 	// add pin to next availible location.
 	iterateMapPins(function(val,offset){
 		if (val == 0xffffffff){
-			tempFile.writeInt(offset, icon)
+			tempFile.writeU32(offset, icon)
 			return false
 		}
 		return true;
@@ -911,9 +984,9 @@ function addMapPin(icon, location){
 		i++
 		if (val == -100000){
 			added = true;
-			tempFile.writeFloat32(offset,location[0])
-			tempFile.writeFloat32(offset+8,location[1])
-			tempFile.writeFloat32(offset+16,location[2])
+			tempFile.writeF32(offset,location[0])
+			tempFile.writeF32(offset+8,location[1])
+			tempFile.writeF32(offset+16,location[2])
 			return false;
 		}
 		return true;
@@ -946,9 +1019,8 @@ function addLocationsToMap(){
 }
 
 
-/* MarcTooltips.js v20170518 - Marc Robledo 2014-2017 - http://www.marcrobledo.com/license */
-var MarcTooltips=function(){return{add:function(a,b,c){var d=document.createElement("div");d.className="tooltip",d.style.position="absolute",d.style.zIndex="9000",d.style.top="0",d.style.left="0",d.innerHTML=b,document.body.appendChild(d);var e="down",f="center";c&&c.position&&/^(up|down|left|right)$/i.test(c.position)&&(e=c.position.toLowerCase()),c&&c.align&&/^(top|bottom|left|right)$/i.test(c.align)&&(("up"!==e&&"down"!==e||"left"!==c.align&&"right"!==c.align)&&("left"!==e&&"right"!==e||"top"!==c.align&&"bottom"!==c.align)||(f=c.align.toLowerCase()));var h=document.createElement("div");h.className="arrow",d.className+=" position-"+e+" align-"+f,d.className+="left"===e||"right"===e?" position-horizontal":" position-vertical",d.appendChild(h);var i=function(){var a=document.documentElement,b=(window.pageXOffset||a.scrollLeft)-(a.clientLeft||0),c=(window.pageYOffset||a.scrollTop)-(a.clientTop||0),g=this.getBoundingClientRect(),h=d.getBoundingClientRect();d.style.top="up"===e?parseInt(g.top+c-h.height)+"px":"down"===e?parseInt(g.top+c+g.height)+"px":"top"===f?parseInt(g.top+c)+"px":"bottom"===f?parseInt(g.top+c-(h.height-g.height))+"px":parseInt(g.top+c-parseInt((h.height-g.height)/2))+"px",d.style.left="up"===e||"down"===e?"left"===f?parseInt(g.left+b)+"px":"right"===f?parseInt(g.left+b-(h.width-g.width))+"px":parseInt(g.left+b-parseInt((h.width-g.width)/2))+"px":"left"===e?parseInt(g.left+b-h.width)+"px":parseInt(g.left+b+g.width)+"px",d.className+=" visible"},j=function(){d.className=d.className.replace(" visible","")};"string"==typeof a&&(a=[a]);for(var k=0;k<a.length;k++)if("string"==typeof a[k])if(/^#[0-9a-zA-Z_\-]+$/.test(a[k])){var l=document.getElementById(a[k].replace("#",""));l.addEventListener("mouseover",i,!1),l.addEventListener("mouseout",j,!1)}else for(var m=document.querySelectorAll(a[k]),n=0;n<m.length;n++)m[n].addEventListener("mouseover",i,!1),m[n].addEventListener("mouseout",j,!1);else a[k].addEventListener("mouseover",i,!1),a[k].addEventListener("mouseout",j,!1)}}}();
-
+/* MarcTooltips.js v20200216 - Marc Robledo 2014-2020 - http://www.marcrobledo.com/license */
+var MarcTooltips=function(){var n=/MSIE 8/.test(navigator.userAgent);function d(t,e,o){n?t.attachEvent("on"+e,o):t.addEventListener(e,o,!1)}function u(t){void 0!==t.stopPropagation?t.stopPropagation():t.cancelBubble=!0}function g(t){if(/^#[0-9a-zA-Z_\-]+$/.test(t))return[document.getElementById(t.replace("#",""))];var e=document.querySelectorAll(t);if(n){for(var o=[],i=0;i<e.length;i++)o.push(e[i]);return o}return Array.prototype.slice.call(e)}var h=function(t,e,o){t.className=t.className.replace(/position-\w+/,"position-"+e.position).replace(/align-\w+/,"align-"+e.align);var i=(window.pageXOffset||document.documentElement.scrollLeft)-(document.documentElement.clientLeft||0),n=(window.pageYOffset||document.documentElement.scrollTop)-(document.documentElement.clientTop||0);e.fixed&&(n=i=0);var l=t.attachedTo.getBoundingClientRect().left,a=t.attachedTo.getBoundingClientRect().top,s=t.attachedTo.offsetWidth,p=t.attachedTo.offsetHeight;if("up"===e.position?t.style.top=parseInt(a+n-t.offsetHeight)+"px":"down"===e.position?t.style.top=parseInt(a+n+p)+"px":"top"===e.align?t.style.top=parseInt(a+n)+"px":"bottom"===e.align?t.style.top=parseInt(a+n-(t.offsetHeight-p))+"px":t.style.top=parseInt(a+n-parseInt((t.offsetHeight-p)/2))+"px","up"===e.position||"down"===e.position?"left"===e.align?t.style.left=parseInt(l+i)+"px":"right"===e.align?t.style.left=parseInt(l+i-(t.offsetWidth-s))+"px":t.style.left=parseInt(l+i-parseInt((t.offsetWidth-s)/2))+"px":"left"===e.position?t.style.left=parseInt(l+i-t.offsetWidth)+"px":"right"===e.position&&(t.style.left=parseInt(l+i+s)+"px"),o){var r={position:e.position,align:e.align,fixed:e.fixed},c=parseInt(t.style.left.replace("px","")),f=parseInt(t.style.top.replace("px","")),d=c+t.offsetWidth,u=f+t.offsetHeight,g=(i=window.scrollX,n=window.scrollY,Math.max(document.documentElement.clientWidth,window.innerWidth||0)),m=Math.max(document.documentElement.clientHeight,window.innerHeight||0);"up"===e.position||"down"===e.position?(g<d?r.align="right":c<i&&(r.align="left"),f<n?r.position="down":n+m<u&&(r.position="up")):(m<u?r.align="bottom":f<n&&(r.align="top"),c<i?r.position="right":i+g<d&&(r.position="left")),h(t,r,!1)}},m={};d(window,"load",function(){d(n?document:window,"click",function(){for(key in m)/ visible$/.test(m[key].className)&&/:true:/.test(key)&&(m[key].className=m[key].className.replace(" visible",""))}),d(window,"resize",function(){for(key in m)/ visible$/.test(m[key].className)&&m[key].attachedTo&&h(m[key],m[key].tooltipInfo,!0)})});function y(t){var e=t.currentTarget||t.srcElement;e.title&&(e.setAttribute("data-tooltip",e.title),e.title=""),(e.tooltip.attachedTo=e).tooltip.innerHTML=e.getAttribute("data-tooltip"),e.tooltip.className+=" visible",h(e.tooltip,e.tooltip.tooltipInfo,!0)}function w(t){var e=t.currentTarget||t.srcElement;e.tooltip.className=e.tooltip.className.replace(" visible","")}return{add:function(t,e){var o="down",i="center",n=!1,l=!1,a=!1,s=!1,p=!1;e&&(e.position&&/^(up|down|left|right)$/i.test(e.position)&&(o=e.position.toLowerCase()),e.align&&/^(top|bottom|left|right)$/i.test(e.align)&&(("up"!==o&&"down"!==o||"left"!==e.align&&"right"!==e.align)&&("left"!==o&&"right"!==o||"top"!==e.align&&"bottom"!==e.align)||(i=e.align.toLowerCase())),l=e.clickable||e.onClick||e.onclick||!1,a=e.focusable||e.onFocus||e.onfocus||!1,s=e.fixed||e.positionFixed||!1,n=e.class||e.className||e.customClass||e.customClassName||!1,p=e.text||e.customText||!1);for(var r=function(t){if("string"==typeof t)return g(t);if(t.length){for(var e=[],o=0;o<t.length;o++)"string"==typeof t[o]?e=e.concat(g(t[o])):e.push(t[o]);return e}return[t]}(t),c=function(t,e,o,i,n){var l=t+":"+e+":"+o+":"+i;if(m[l])return m[l];var a=document.createElement("div");return a.className="tooltip position-"+t+" align-"+e,a.className+="left"===t||"right"===t?" position-horizontal":" position-vertical",i&&(a.className+=" "+i),a.style.position=n?"fixed":"absolute",a.style.zIndex="9000",a.style.top="0",a.style.left="0",a.attachedTo=null,a.tooltipInfo={position:t,align:e,fixed:n},o&&d(a,"click",u),m[l]=a,document.body.appendChild(a),a}(o,i,l||a,n,s),f=0;f<r.length;f++)p?r[f].setAttribute("data-tooltip",p):r[f].title&&r[f].setAttribute("data-tooltip",r[f].title),r[f].title="",r[f].tooltip=c,a?(d(r[f],"focus",y),d(r[f],"blur",w),d(r[f],"click",u)):l?(d(r[f],"click",y),d(r[f],"click",u)):(d(r[f],"mouseover",y),d(r[f],"mouseout",w))}}}();
 
 function onScroll(){
 	var h=document.getElementById('header-top').getBoundingClientRect().height;
@@ -960,13 +1032,39 @@ function onScroll(){
 		document.getElementById('header').style.top='0px';
 	}
 }
+window.addEventListener('scroll', onScroll, false);
 
-window.addEventListener('load',function(){
-	/* service worker */
-	if(location.protocol==='http:')
-		location.href=window.location.href.replace('http:','https:');
-	if('serviceWorker' in navigator)
-		navigator.serviceWorker.register('_cache_service_worker.js');
+if(typeof String.endsWith==='undefined'){
+	String.prototype.endsWith=function(search){
+        return (new RegExp(search+'$')).test(this)
+    };
+}
+if(typeof String.startsWith==='undefined'){
+	String.prototype.startsWith=function(search){
+        return (new RegExp('^'+search)).test(this)
+    };
+}
 
-	window.addEventListener('scroll',onScroll,false);
-}, false);
+
+
+
+
+
+
+
+
+
+var masterModeLoaded=false;
+function loadMasterMode(){
+	if(!masterModeLoaded){
+		var script=document.createElement('script');
+		script.type='text/javascript';
+		script.src='./zelda-botw.master.js';
+		script.onload=function(){
+			masterModeLoaded=true;
+			document.getElementById('tab-button-master').disabled=false;
+			//BOTWMasterEditor.prepare();
+		};
+		document.getElementsByTagName('head')[0].appendChild(script);
+	}
+}
